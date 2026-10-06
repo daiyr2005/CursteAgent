@@ -1,34 +1,28 @@
+import uvicorn
 from fastapi import FastAPI
 
-from mysite.api.applications import router as applications_router
-from mysite.api.auth import router as auth_router
-from mysite.api.categories import router as categories_router
-from mysite.api.courses import router as courses_router
-from mysite.api.enrollments import router as enrollments_router
-from mysite.api.refresh_tokens import router as refresh_tokens_router
-from mysite.api.study_groups import router as study_groups_router
-from mysite.api.users import router as users_router
-from mysite.db.db import Base, engine
+from mysite.admin.setup import setup_admin
+from mysite.api import (
+    applications,
+    auth,
+    categories,
+    courses,
+    enrollments,
+    study_groups,
+    users,
+)
 
+app = FastAPI(title="Courses API")
 
-app = FastAPI(title="Course API")
+app.include_router(auth.router)
+app.include_router(users.router)
+app.include_router(categories.router)
+app.include_router(courses.router)
+app.include_router(study_groups.router)
+app.include_router(applications.router)
+app.include_router(enrollments.router)
 
+setup_admin(app)
 
-@app.on_event("startup")
-def on_startup() -> None:
-    Base.metadata.create_all(bind=engine)
-
-
-@app.get("/")
-def root() -> dict[str, str]:
-    return {"message": "Course API is running"}
-
-
-app.include_router(auth_router)
-app.include_router(users_router)
-app.include_router(refresh_tokens_router)
-app.include_router(categories_router)
-app.include_router(courses_router)
-app.include_router(study_groups_router)
-app.include_router(applications_router)
-app.include_router(enrollments_router)
+if __name__ == '__main__':
+    uvicorn.run(app, host="0.0.0.0", port=8000)
